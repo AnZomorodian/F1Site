@@ -1,0 +1,282 @@
+{% extends "base.html" %}
+
+{% block title %}F1 Telemetry Analysis - Premium Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Enhanced Session Information Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-gradient border-0 shadow-lg" style="background: linear-gradient(135deg, var(--bg-card), var(--bg-tertiary));">
+                <div class="card-body p-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h1 class="card-title mb-3 text-primary d-flex align-items-center">
+                                <i class="fas fa-tachometer-alt me-3" style="font-size: 1.5rem;"></i>
+                                {{ session_info.event_name }} - {{ session_info.session }}
+                            </h1>
+                            <div class="session-details d-flex flex-wrap gap-4">
+                                <span class="badge bg-secondary px-3 py-2">
+                                    <i class="fas fa-map-marker-alt me-2"></i>
+                                    {{ session_info.location }}, {{ session_info.country }}
+                                </span>
+                                <span class="badge bg-info px-3 py-2">
+                                    <i class="fas fa-calendar me-2"></i>
+                                    {{ session_info.date }}
+                                </span>
+                                <span class="badge bg-warning text-dark px-3 py-2">
+                                    <i class="fas fa-trophy me-2"></i>
+                                    {{ session_info.year }} Season
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg">
+                                <i class="fas fa-plus me-2"></i>
+                                New Analysis
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Metrics Overview -->
+    <div class="metrics-row">
+        <div class="metric-card">
+            <div class="metric-value">{{ lap_times_data|length }}</div>
+            <div class="metric-label">Drivers Analyzed</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">
+                {% set total_laps = lap_times_data.values() | map(attribute='total_laps') | sum %}
+                {{ total_laps }}
+            </div>
+            <div class="metric-label">Total Laps</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">
+                {% set fastest_times = lap_times_data.values() | selectattr('fastest_lap_time') | map(attribute='fastest_lap_time') | list %}
+                {% if fastest_times %}
+                    {% set fastest_time = fastest_times | min %}
+                    {% set minutes = (fastest_time // 60) | int %}
+                    {% set seconds = fastest_time % 60 %}
+                    {{ minutes }}:{{ "%.3f"|format(seconds) }}
+                {% else %}
+                    N/A
+                {% endif %}
+            </div>
+            <div class="metric-label">Fastest Lap</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-value">
+                {% set total_speed_entries = [] %}
+                {% for driver_data in lap_times_data.values() %}
+                    {% for speed in driver_data.speed_traps %}
+                        {% if speed %}
+                            {{ total_speed_entries.append(speed) or '' }}
+                        {% endif %}
+                    {% endfor %}
+                {% endfor %}
+                {% if total_speed_entries %}
+                    {{ "%.1f"|format(total_speed_entries | sum / total_speed_entries | length) }} km/h
+                {% else %}
+                    N/A
+                {% endif %}
+            </div>
+            <div class="metric-label">Avg Top Speed</div>
+        </div>
+    </div>
+
+    <!-- Premium Dashboard Grid -->
+    <div class="dashboard-grid">
+        <!-- Enhanced Lap Times Chart -->
+        <div class="chart-container">
+            <div class="chart-title">
+                <i class="fas fa-chart-line"></i>
+                Lap Times Evolution
+            </div>
+            <div class="chart-subtitle">
+                Real-time performance comparison across all laps
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="lapTimesChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Sector Performance Radar -->
+        <div class="chart-container">
+            <div class="chart-title">
+                <i class="fas fa-chart-area"></i>
+                Sector Performance
+            </div>
+            <div class="chart-subtitle">
+                Average sector times comparison
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="sectorRadarChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Speed Analysis -->
+        <div class="chart-container">
+            <div class="chart-title">
+                <i class="fas fa-tachometer-alt"></i>
+                Speed Trap Analysis
+            </div>
+            <div class="chart-subtitle">
+                Maximum speeds throughout the session
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="speedChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Performance Delta -->
+        <div class="chart-container">
+            <div class="chart-title">
+                <i class="fas fa-balance-scale"></i>
+                Performance Delta
+            </div>
+            <div class="chart-subtitle">
+                Gap analysis relative to fastest driver
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="deltaChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Tire Strategy -->
+        <div class="chart-container">
+            <div class="chart-title">
+                <i class="fas fa-circle"></i>
+                Tire Strategy
+            </div>
+            <div class="chart-subtitle">
+                Compound usage throughout the session
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="tireStrategyChart"></canvas>
+            </div>
+            <div class="tire-legend">
+                <div class="tire-legend-item">
+                    <div class="tire-color-box" style="background: #ff0000;"></div>
+                    <span>Soft</span>
+                </div>
+                <div class="tire-legend-item">
+                    <div class="tire-color-box" style="background: #ffff00;"></div>
+                    <span>Medium</span>
+                </div>
+                <div class="tire-legend-item">
+                    <div class="tire-color-box" style="background: #ffffff;"></div>
+                    <span>Hard</span>
+                </div>
+                <div class="tire-legend-item">
+                    <div class="tire-color-box" style="background: #00ff00;"></div>
+                    <span>Intermediate</span>
+                </div>
+                <div class="tire-legend-item">
+                    <div class="tire-color-box" style="background: #0000ff;"></div>
+                    <span>Wet</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Driver Performance Cards -->
+    <div class="driver-performance-grid">
+        {% for driver_code, driver_data in lap_times_data.items() %}
+        <div class="driver-performance-card">
+            <div class="driver-header">
+                <div class="driver-avatar" style="background: {{ driver_data.color }};">
+                    {{ driver_code }}
+                </div>
+                <div class="driver-info">
+                    <h4>{{ driver_code }}</h4>
+                    <div class="team">Driver #{{ driver_code }}</div>
+                </div>
+            </div>
+            <div class="performance-stats">
+                {% if driver_data.fastest_lap_time %}
+                <div class="stat-row">
+                    <span class="stat-label">
+                        <i class="fas fa-stopwatch text-success me-2"></i>
+                        Best Lap Time
+                    </span>
+                    <span class="stat-value lap-time">
+                        {% set minutes = (driver_data.fastest_lap_time // 60) | int %}
+                        {% set seconds = driver_data.fastest_lap_time % 60 %}
+                        {{ minutes }}:{{ "%.3f"|format(seconds) }}
+                    </span>
+                </div>
+                {% endif %}
+                
+                <div class="stat-row">
+                    <span class="stat-label">
+                        <i class="fas fa-list-ol me-2"></i>
+                        Total Laps
+                    </span>
+                    <span class="stat-value">{{ driver_data.total_laps }}</span>
+                </div>
+                
+                {% if driver_data.average_lap_time %}
+                <div class="stat-row">
+                    <span class="stat-label">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Average Lap
+                    </span>
+                    <span class="stat-value">
+                        {% set avg_minutes = (driver_data.average_lap_time // 60) | int %}
+                        {% set avg_seconds = driver_data.average_lap_time % 60 %}
+                        {{ avg_minutes }}:{{ "%.3f"|format(avg_seconds) }}
+                    </span>
+                </div>
+                {% endif %}
+                
+                {% set max_speed = driver_data.speed_traps | select('number') | max %}
+                {% if max_speed %}
+                <div class="stat-row">
+                    <span class="stat-label">
+                        <i class="fas fa-tachometer-alt text-info me-2"></i>
+                        Top Speed
+                    </span>
+                    <span class="stat-value">{{ "%.1f"|format(max_speed) }} km/h</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Chart Data for JavaScript -->
+<script>
+    const lapTimesData = {{ lap_times_data | tojson }};
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize all charts with the premium dashboard
+        if (window.f1Dashboard) {
+            // Create enhanced lap times chart
+            window.f1Dashboard.createLapTimesChart('lapTimesChart', lapTimesData);
+            
+            // Create sector radar chart
+            window.f1Dashboard.createSectorRadarChart('sectorRadarChart', lapTimesData);
+            
+            // Create speed analysis chart
+            window.f1Dashboard.createSpeedChart('speedChart', lapTimesData);
+            
+            // Create performance delta chart
+            window.f1Dashboard.createDeltaChart('deltaChart', lapTimesData);
+            
+            // Create tire strategy chart
+            window.f1Dashboard.createTireStrategyChart('tireStrategyChart', lapTimesData);
+        }
+    });
+</script>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/advanced-charts.js') }}"></script>
+<script src="{{ url_for('static', filename='js/dashboard-animations.js') }}"></script>
+{% endblock %}

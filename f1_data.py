@@ -263,7 +263,7 @@ class F1DataManager:
             return {'error': str(e)}
     
     def get_lap_times(self, year, round_number, session, drivers):
-        """Get lap times comparison for multiple drivers"""
+        """Get comprehensive lap times data with advanced metrics"""
         try:
             session_obj = fastf1.get_session(year, round_number, session)
             session_obj.load()
@@ -276,18 +276,49 @@ class F1DataManager:
                 
                 if not valid_laps.empty:
                     lap_numbers = valid_laps['LapNumber'].tolist()
-                    # Handle NaN values properly - convert to None for JSON serialization
+                    
+                    # Enhanced lap times with multiple metrics
                     lap_times = []
-                    for time in valid_laps['LapTime']:
-                        if pd.isna(time):
+                    sector1_times = []
+                    sector2_times = []
+                    sector3_times = []
+                    speed_traps = []
+                    tire_compounds = []
+                    
+                    for _, lap_row in valid_laps.iterrows():
+                        # Lap time
+                        if pd.isna(lap_row['LapTime']):
                             lap_times.append(None)
                         else:
-                            lap_times.append(float(time.total_seconds()))
+                            lap_times.append(float(lap_row['LapTime'].total_seconds()))
+                        
+                        # Sector times
+                        sector1_times.append(float(lap_row['Sector1Time'].total_seconds()) if pd.notna(lap_row['Sector1Time']) else None)
+                        sector2_times.append(float(lap_row['Sector2Time'].total_seconds()) if pd.notna(lap_row['Sector2Time']) else None)
+                        sector3_times.append(float(lap_row['Sector3Time'].total_seconds()) if pd.notna(lap_row['Sector3Time']) else None)
+                        
+                        # Speed trap
+                        speed_traps.append(float(lap_row['SpeedST']) if pd.notna(lap_row['SpeedST']) else None)
+                        
+                        # Tire compound
+                        tire_compounds.append(str(lap_row['Compound']) if pd.notna(lap_row['Compound']) else 'Unknown')
+                    
+                    # Performance statistics
+                    fastest_lap_time = min([t for t in lap_times if t is not None]) if lap_times else None
+                    average_lap_time = sum([t for t in lap_times if t is not None]) / len([t for t in lap_times if t is not None]) if lap_times else None
                     
                     lap_times_data[driver] = {
                         'lap_numbers': lap_numbers,
                         'lap_times': lap_times,
-                        'color': self.driver_colors.get(driver, '#FFFFFF')
+                        'sector1_times': sector1_times,
+                        'sector2_times': sector2_times,
+                        'sector3_times': sector3_times,
+                        'speed_traps': speed_traps,
+                        'tire_compounds': tire_compounds,
+                        'color': self.driver_colors.get(driver, '#FFFFFF'),
+                        'fastest_lap_time': fastest_lap_time,
+                        'average_lap_time': average_lap_time,
+                        'total_laps': len(lap_times)
                     }
             
             return lap_times_data

@@ -37,16 +37,19 @@ Preferred communication style: Simple, everyday language.
 
 ### Frontend Components
 - **`templates/base.html`**: Base template with navigation and common structure
-- **`templates/index.html`**: Landing page with session selection interface
-- **`templates/telemetry.html`**: Telemetry visualization page
-- **`static/css/style.css`**: GP Tempo-inspired styling system
+- **`templates/index.html`**: Landing page with enhanced driver selection interface
+- **`templates/telemetry_premium.html`**: Premium dashboard with advanced visualizations
+- **`static/css/style.css`**: Professional GP Tempo-inspired styling with premium dashboard components
 - **`static/js/main.js`**: General UI interactions and utilities
-- **`static/js/telemetry.js`**: Telemetry chart management and visualization
+- **`static/js/driver-selection.js`**: Enhanced driver selection with team grouping
+- **`static/js/advanced-charts.js`**: Premium Chart.js dashboard with 5 chart types
 
 ### Data Management
-- **F1DataManager**: Centralized class for handling FastF1 API interactions
-- **Team/Driver Color Mapping**: Consistent color schemes for visualization
+- **F1DataManager**: Enhanced class for comprehensive FastF1 API interactions
+- **Advanced Metrics**: Lap times, sector times, speed traps, tire compounds, performance statistics
+- **Team/Driver Color Mapping**: Professional color schemes for visualization
 - **Year Range**: Supports F1 data from 2018 to current year
+- **Premium Dashboard**: 5 chart types with real-time telemetry analysis
 
 ## Data Flow
 

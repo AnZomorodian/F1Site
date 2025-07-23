@@ -65,20 +65,16 @@ def telemetry():
         # Get session info
         session_info = f1_data.get_session_info(year, round_number, session)
         
-        # Get driver data
-        driver_data = []
-        for driver in drivers:
-            data = f1_data.get_driver_data(year, round_number, session, driver)
-            if data:
-                driver_data.append(data)
+        # Get comprehensive lap times data with enhanced metrics
+        lap_times_data = f1_data.get_lap_times(year, round_number, session, drivers)
         
-        if not driver_data:
+        if not lap_times_data:
             flash('No data available for selected drivers', 'error')
             return render_template('index.html', years=f1_data.get_available_years())
         
-        return render_template('telemetry.html', 
+        return render_template('telemetry_premium.html', 
                              session_info=session_info,
-                             driver_data=driver_data,
+                             lap_times_data=lap_times_data,
                              year=year,
                              round_number=round_number,
                              session=session)
