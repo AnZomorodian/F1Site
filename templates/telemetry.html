@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+
+{% block title %}F1 Telemetry - {{ session_info.event_name }}{% endblock %}
+
+{% block content %}
+<!-- Session Header -->
+<div class="session-header">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <div class="session-info">
+                <h2 class="text-white mb-2">
+                    <i class="fas fa-flag-checkered me-2"></i>
+                    {{ session_info.event_name }} {{ session_info.year }}
+                </h2>
+                <div class="session-details">
+                    <span class="badge bg-primary me-2">{{ session }}</span>
+                    <span class="text-light">
+                        <i class="fas fa-map-marker-alt me-1"></i>
+                        {{ session_info.location }}, {{ session_info.country }}
+                    </span>
+                    {% if session_info.date %}
+                        <span class="text-light ms-3">
+                            <i class="fas fa-calendar me-1"></i>
+                            {{ session_info.date }}
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="{{ url_for('index') }}" class="btn btn-outline-light">
+                <i class="fas fa-arrow-left me-2"></i>
+                New Analysis
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Driver Cards -->
+<div class="drivers-section mb-4">
+    <div class="row g-3">
+        {% for driver_data in driver_data %}
+        <div class="col-lg-3 col-md-4 col-sm-6">
+            <div class="card driver-card h-100" data-driver="{{ driver_data.driver }}">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="mb-0 fw-bold">{{ driver_data.driver }}</h6>
+                        <small class="text-muted">{{ driver_data.team }}</small>
+                    </div>
+                    <div class="driver-color-badge" style="background-color: {{ driver_data.color }}"></div>
+                </div>
+                <div class="card-body">
+                    <div class="driver-stats">
+                        {% if driver_data.fastest_lap_time %}
+                        <div class="stat-item">
+                            <i class="fas fa-stopwatch text-success me-2"></i>
+                            <span class="stat-label">Best Lap:</span>
+                            <span class="stat-value">{{ driver_data.fastest_lap_time }}</span>
+                        </div>
+                        {% endif %}
+                        
+                        {% if driver_data.position %}
+                        <div class="stat-item">
+                            <i class="fas fa-trophy text-warning me-2"></i>
+                            <span class="stat-label">Position:</span>
+                            <span class="stat-value">{{ driver_data.position }}</span>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="stat-item">
+                            <i class="fas fa-flag text-info me-2"></i>
+                            <span class="stat-label">Laps:</span>
+                            <span class="stat-value">{{ driver_data.total_laps }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Telemetry Controls -->
+<div class="telemetry-controls mb-4">
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="fas fa-chart-line me-2"></i>
+                Telemetry Analysis
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <div class="btn-group" role="group" aria-label="Chart type">
+                        <input type="radio" class="btn-check" name="chartType" id="speedChart" value="speed" checked>
+                        <label class="btn btn-outline-primary" for="speedChart">
+                            <i class="fas fa-tachometer-alt me-1"></i>
+                            Speed
+                        </label>
+                        
+                        <input type="radio" class="btn-check" name="chartType" id="throttleChart" value="throttle">
+                        <label class="btn btn-outline-primary" for="throttleChart">
+                            <i class="fas fa-gas-pump me-1"></i>
+                            Throttle
+                        </label>
+                        
+                        <input type="radio" class="btn-check" name="chartType" id="brakeChart" value="brake">
+                        <label class="btn btn-outline-primary" for="brakeChart">
+                            <i class="fas fa-circle me-1"></i>
+                            Brake
+                        </label>
+                        
+                        <input type="radio" class="btn-check" name="chartType" id="lapTimesChart" value="lap_times">
+                        <label class="btn btn-outline-primary" for="lapTimesChart">
+                            <i class="fas fa-stopwatch me-1"></i>
+                            Lap Times
+                        </label>
+                    </div>
+                </div>
+                <div class="col-md-6 text-end">
+                    <button class="btn btn-success" id="loadTelemetryBtn">
+                        <i class="fas fa-download me-2"></i>
+                        Load Telemetry Data
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Chart Container -->
+<div class="chart-section">
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0" id="chartTitle">
+                <i class="fas fa-chart-area me-2"></i>
+                Speed Comparison
+            </h5>
+            <div class="chart-controls">
+                <button class="btn btn-sm btn-outline-secondary" id="exportChart">
+                    <i class="fas fa-download me-1"></i>
+                    Export
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="chart-container">
+                <canvas id="telemetryChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay" style="display: none;">
+    <div class="loading-content">
+        <div class="spinner-border text-primary mb-3" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <h5 class="text-white">Loading Telemetry Data...</h5>
+        <p class="text-muted">Processing FastF1 data, please wait...</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/telemetry.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize telemetry page with data
+    const sessionData = {
+        year: {{ year }},
+        round_number: {{ round_number }},
+        session: '{{ session }}',
+        drivers: [
+            {% for driver_data in driver_data %}
+            {
+                code: '{{ driver_data.driver }}',
+                name: '{{ driver_data.full_name }}',
+                team: '{{ driver_data.team }}',
+                color: '{{ driver_data.color }}',
+                fastest_lap: {{ driver_data.fastest_lap_number or 'null' }}
+            }{{ ',' if not loop.last }}
+            {% endfor %}
+        ]
+    };
+    
+    // Initialize telemetry manager
+    window.telemetryManager = new TelemetryManager(sessionData);
+    
+    // Set up event listeners for chart type changes
+    document.querySelectorAll('input[name="chartType"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.checked) {
+                window.telemetryManager.switchChartType(this.value);
+            }
+        });
+    });
+    
+    // Load telemetry button
+    document.getElementById('loadTelemetryBtn').addEventListener('click', function() {
+        window.telemetryManager.loadAllTelemetryData();
+    });
+    
+    // Export chart button
+    document.getElementById('exportChart').addEventListener('click', function() {
+        window.telemetryManager.exportChart();
+    });
+});
+</script>
+{% endblock %}
