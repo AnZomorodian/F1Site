@@ -1,0 +1,549 @@
+{% extends "base.html" %}
+
+{% block title %}Laptica - F1 Telemetry Analysis{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Modern Session Header -->
+    <div class="section-header animate-fade-in">
+        <h1 class="section-title">{{ session_info.event_name }}</h1>
+        <p class="section-subtitle">{{ session_info.session }} - {{ session_info.year }} Season</p>
+        <div class="section-divider"></div>
+        
+        <div class="row justify-content-center">
+            <div class="col-auto">
+                <span class="badge bg-primary p-2 fs-6">
+                    <i class="fas fa-map-marker-alt me-2"></i>
+                    {{ session_info.location }}, {{ session_info.country }}
+                </span>
+            </div>
+            <div class="col-auto">
+                <span class="badge bg-success p-2 fs-6">
+                    <i class="fas fa-calendar me-2"></i>
+                    {{ session_info.date }}
+                </span>
+            </div>
+            <div class="col-auto">
+                <a href="{{ url_for('index') }}" class="btn btn-modern">
+                    <i class="fas fa-plus me-2"></i>
+                    New Analysis
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Performance Overview -->
+    <div class="data-grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
+        <div class="data-card animate-fade-in">
+            <div class="data-label">
+                <i class="fas fa-users me-2"></i>
+                Drivers Analyzed
+            </div>
+            <div class="data-value">{{ lap_times_data|length }}</div>
+        </div>
+        
+        <div class="data-card animate-fade-in">
+            <div class="data-label">
+                <i class="fas fa-flag me-2"></i>
+                Total Laps Completed
+            </div>
+            <div class="data-value">
+                {% set total_laps = lap_times_data.values() | map(attribute='total_laps') | sum %}
+                {{ total_laps }}
+            </div>
+        </div>
+        
+        <div class="data-card animate-fade-in">
+            <div class="data-label">
+                <i class="fas fa-stopwatch me-2"></i>
+                Fastest Lap Time
+            </div>
+            <div class="data-value" style="font-size: 1.5rem;">
+                {% set fastest_times = lap_times_data.values() | selectattr('fastest_lap_time') | map(attribute='fastest_lap_time') | list %}
+                {% if fastest_times %}
+                    {% set fastest_time = fastest_times | min %}
+                    {% set minutes = (fastest_time // 60) | int %}
+                    {% set seconds = fastest_time % 60 %}
+                    {{ minutes }}:{{ "%.3f"|format(seconds) }}
+                {% else %}
+                    N/A
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="data-card animate-fade-in">
+            <div class="data-label">
+                <i class="fas fa-tachometer-alt me-2"></i>
+                Average Top Speed
+            </div>
+            <div class="data-value">
+                {% set all_speeds = [] %}
+                {% for driver_data in lap_times_data.values() %}
+                    {% for speed in driver_data.speed_traps %}
+                        {% if speed %}
+                            {{ all_speeds.append(speed) or '' }}
+                        {% endif %}
+                    {% endfor %}
+                {% endfor %}
+                {% if all_speeds %}
+                    {{ "%.1f"|format(all_speeds | sum / all_speeds | length) }} km/h
+                {% else %}
+                    N/A
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Charts Dashboard -->
+    <div class="data-grid mt-5" style="grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));">
+        <!-- Lap Times Evolution -->
+        <div class="chart-container animate-fade-in">
+            <h3 class="chart-title">
+                <i class="fas fa-chart-line"></i>
+                Lap Times Evolution
+            </h3>
+            <p class="chart-subtitle">Complete lap time progression throughout the session</p>
+            <div class="chart-wrapper">
+                <canvas id="lapTimesChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Sector Performance Analysis -->
+        <div class="chart-container animate-fade-in">
+            <h3 class="chart-title">
+                <i class="fas fa-chart-area"></i>
+                Sector Performance Analysis
+            </h3>
+            <p class="chart-subtitle">Average sector times comparison between drivers</p>
+            <div class="chart-wrapper">
+                <canvas id="sectorRadarChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Speed Trap Analysis -->
+        <div class="chart-container animate-fade-in">
+            <h3 class="chart-title">
+                <i class="fas fa-tachometer-alt"></i>
+                Speed Trap Analysis
+            </h3>
+            <p class="chart-subtitle">Maximum speeds achieved throughout the session</p>
+            <div class="chart-wrapper">
+                <canvas id="speedChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Performance Delta Analysis -->
+        <div class="chart-container animate-fade-in">
+            <h3 class="chart-title">
+                <i class="fas fa-balance-scale"></i>
+                Performance Gap Analysis
+            </h3>
+            <p class="chart-subtitle">Time delta comparison relative to fastest driver</p>
+            <div class="chart-wrapper">
+                <canvas id="deltaChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Tire Strategy Overview -->
+        <div class="chart-container animate-fade-in">
+            <h3 class="chart-title">
+                <i class="fas fa-circle"></i>
+                Tire Strategy Overview
+            </h3>
+            <p class="chart-subtitle">Compound usage patterns throughout the session</p>
+            <div class="chart-wrapper">
+                <canvas id="tireStrategyChart"></canvas>
+            </div>
+            <!-- Tire Legend -->
+            <div class="mt-3 d-flex flex-wrap justify-content-center gap-3">
+                <div class="d-flex align-items-center">
+                    <div style="width: 20px; height: 20px; background: #ef4444; border-radius: 4px; margin-right: 8px;"></div>
+                    <span>Soft</span>
+                </div>
+                <div class="d-flex align-items-center">
+                    <div style="width: 20px; height: 20px; background: #f59e0b; border-radius: 4px; margin-right: 8px;"></div>
+                    <span>Medium</span>
+                </div>
+                <div class="d-flex align-items-center">
+                    <div style="width: 20px; height: 20px; background: #6b7280; border-radius: 4px; margin-right: 8px;"></div>
+                    <span>Hard</span>
+                </div>
+                <div class="d-flex align-items-center">
+                    <div style="width: 20px; height: 20px; background: #10b981; border-radius: 4px; margin-right: 8px;"></div>
+                    <span>Intermediate</span>
+                </div>
+                <div class="d-flex align-items-center">
+                    <div style="width: 20px; height: 20px; background: #3b82f6; border-radius: 4px; margin-right: 8px;"></div>
+                    <span>Wet</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Driver Performance Cards -->
+    <div class="section-header mt-5">
+        <h2 class="section-title" style="font-size: 2rem;">Driver Performance Breakdown</h2>
+        <div class="section-divider"></div>
+    </div>
+
+    <div class="data-grid" style="grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));">
+        {% for driver_code, driver_data in lap_times_data.items() %}
+        <div class="driver-card animate-fade-in">
+            <!-- Driver Header -->
+            <div class="d-flex align-items-center mb-4">
+                <div class="driver-avatar me-3" style="background: {{ driver_data.color }};">
+                    {{ driver_code }}
+                </div>
+                <div>
+                    <h4 class="data-label mb-1">{{ driver_code }}</h4>
+                    <p class="text-muted mb-0">Driver #{{ driver_code }}</p>
+                </div>
+            </div>
+
+            <!-- Performance Statistics -->
+            <div class="row g-3">
+                {% if driver_data.fastest_lap_time %}
+                <div class="col-6">
+                    <div class="metric-card">
+                        <div class="metric-icon metric-success mx-auto">
+                            <i class="fas fa-stopwatch"></i>
+                        </div>
+                        <div class="data-label">Best Lap</div>
+                        <div class="data-value" style="font-size: 1.2rem; color: var(--success-color);">
+                            {% set minutes = (driver_data.fastest_lap_time // 60) | int %}
+                            {% set seconds = driver_data.fastest_lap_time % 60 %}
+                            {{ minutes }}:{{ "%.3f"|format(seconds) }}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="col-6">
+                    <div class="metric-card">
+                        <div class="metric-icon metric-primary mx-auto">
+                            <i class="fas fa-flag"></i>
+                        </div>
+                        <div class="data-label">Total Laps</div>
+                        <div class="data-value" style="font-size: 1.2rem;">{{ driver_data.total_laps }}</div>
+                    </div>
+                </div>
+                
+                {% if driver_data.average_lap_time %}
+                <div class="col-6">
+                    <div class="metric-card">
+                        <div class="metric-icon metric-warning mx-auto">
+                            <i class="fas fa-chart-bar"></i>
+                        </div>
+                        <div class="data-label">Average Lap</div>
+                        <div class="data-value" style="font-size: 1.2rem; color: var(--warning-color);">
+                            {% set avg_minutes = (driver_data.average_lap_time // 60) | int %}
+                            {% set avg_seconds = driver_data.average_lap_time % 60 %}
+                            {{ avg_minutes }}:{{ "%.3f"|format(avg_seconds) }}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="col-6">
+                    <div class="metric-card">
+                        <div class="metric-icon metric-danger mx-auto">
+                            <i class="fas fa-tachometer-alt"></i>
+                        </div>
+                        <div class="data-label">Top Speed</div>
+                        <div class="data-value" style="font-size: 1.2rem; color: var(--danger-color);">
+                            {% set max_speed = driver_data.speed_traps | select('number') | max %}
+                            {% if max_speed %}
+                                {{ "%.1f"|format(max_speed) }} km/h
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Enhanced Chart Initialization -->
+<script>
+    const lapTimesData = {{ lap_times_data | tojson }};
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // Modern Chart.js configuration
+        Chart.defaults.color = '#6b7280';
+        Chart.defaults.borderColor = '#e5e7eb';
+        Chart.defaults.backgroundColor = 'rgba(59, 130, 246, 0.1)';
+        
+        // Initialize enhanced charts
+        initializeModernCharts();
+    });
+
+    function initializeModernCharts() {
+        // Enhanced Lap Times Chart
+        const lapTimesCtx = document.getElementById('lapTimesChart');
+        if (lapTimesCtx && lapTimesData) {
+            const datasets = [];
+            const colors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6'];
+            let colorIndex = 0;
+
+            Object.entries(lapTimesData).forEach(([driver, data]) => {
+                if (data.lap_times && data.lap_times.length > 0) {
+                    datasets.push({
+                        label: driver,
+                        data: data.lap_times.map((time, index) => ({
+                            x: index + 1,
+                            y: time
+                        })),
+                        borderColor: colors[colorIndex % colors.length],
+                        backgroundColor: colors[colorIndex % colors.length] + '20',
+                        borderWidth: 3,
+                        fill: false,
+                        tension: 0.2
+                    });
+                    colorIndex++;
+                }
+            });
+
+            new Chart(lapTimesCtx, {
+                type: 'line',
+                data: { datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Lap Number' },
+                            grid: { color: '#f3f4f6' }
+                        },
+                        y: {
+                            title: { display: true, text: 'Lap Time (seconds)' },
+                            grid: { color: '#f3f4f6' }
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const minutes = Math.floor(context.parsed.y / 60);
+                                    const seconds = (context.parsed.y % 60).toFixed(3);
+                                    return `${context.dataset.label}: ${minutes}:${seconds}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Enhanced Sector Radar Chart
+        const sectorCtx = document.getElementById('sectorRadarChart');
+        if (sectorCtx && lapTimesData) {
+            const datasets = [];
+            const colors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6'];
+            let colorIndex = 0;
+
+            Object.entries(lapTimesData).forEach(([driver, data]) => {
+                if (data.sector_times && data.sector_times.length >= 3) {
+                    const avgSectors = [
+                        data.sector_times.filter((s, i) => i % 3 === 0).reduce((a, b) => a + b, 0) / Math.ceil(data.sector_times.length / 3),
+                        data.sector_times.filter((s, i) => i % 3 === 1).reduce((a, b) => a + b, 0) / Math.ceil(data.sector_times.length / 3),
+                        data.sector_times.filter((s, i) => i % 3 === 2).reduce((a, b) => a + b, 0) / Math.ceil(data.sector_times.length / 3)
+                    ];
+
+                    datasets.push({
+                        label: driver,
+                        data: avgSectors,
+                        borderColor: colors[colorIndex % colors.length],
+                        backgroundColor: colors[colorIndex % colors.length] + '20',
+                        borderWidth: 2,
+                        pointBackgroundColor: colors[colorIndex % colors.length]
+                    });
+                    colorIndex++;
+                }
+            });
+
+            new Chart(sectorCtx, {
+                type: 'radar',
+                data: {
+                    labels: ['Sector 1', 'Sector 2', 'Sector 3'],
+                    datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            beginAtZero: true,
+                            grid: { color: '#f3f4f6' }
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'top' }
+                    }
+                }
+            });
+        }
+
+        // Enhanced Speed Chart
+        const speedCtx = document.getElementById('speedChart');
+        if (speedCtx && lapTimesData) {
+            const datasets = [];
+            const colors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6'];
+            let colorIndex = 0;
+
+            Object.entries(lapTimesData).forEach(([driver, data]) => {
+                if (data.speed_traps && data.speed_traps.length > 0) {
+                    datasets.push({
+                        label: driver,
+                        data: data.speed_traps.map((speed, index) => ({
+                            x: index + 1,
+                            y: speed
+                        })),
+                        borderColor: colors[colorIndex % colors.length],
+                        backgroundColor: colors[colorIndex % colors.length] + '20',
+                        borderWidth: 3,
+                        fill: false,
+                        tension: 0.2
+                    });
+                    colorIndex++;
+                }
+            });
+
+            new Chart(speedCtx, {
+                type: 'line',
+                data: { datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Lap Number' },
+                            grid: { color: '#f3f4f6' }
+                        },
+                        y: {
+                            title: { display: true, text: 'Speed (km/h)' },
+                            grid: { color: '#f3f4f6' }
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'top' }
+                    }
+                }
+            });
+        }
+
+        // Enhanced Delta Chart
+        const deltaCtx = document.getElementById('deltaChart');
+        if (deltaCtx && lapTimesData) {
+            // Find fastest lap time for delta calculation
+            let fastestTime = Infinity;
+            Object.values(lapTimesData).forEach(data => {
+                if (data.fastest_lap_time && data.fastest_lap_time < fastestTime) {
+                    fastestTime = data.fastest_lap_time;
+                }
+            });
+
+            const datasets = [];
+            const colors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6'];
+            let colorIndex = 0;
+
+            Object.entries(lapTimesData).forEach(([driver, data]) => {
+                if (data.lap_times && data.lap_times.length > 0) {
+                    datasets.push({
+                        label: driver,
+                        data: data.lap_times.map((time, index) => ({
+                            x: index + 1,
+                            y: time - fastestTime
+                        })),
+                        borderColor: colors[colorIndex % colors.length],
+                        backgroundColor: colors[colorIndex % colors.length] + '20',
+                        borderWidth: 3,
+                        fill: false,
+                        tension: 0.2
+                    });
+                    colorIndex++;
+                }
+            });
+
+            new Chart(deltaCtx, {
+                type: 'line',
+                data: { datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Lap Number' },
+                            grid: { color: '#f3f4f6' }
+                        },
+                        y: {
+                            title: { display: true, text: 'Delta to Fastest (seconds)' },
+                            grid: { color: '#f3f4f6' }
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'top' }
+                    }
+                }
+            });
+        }
+
+        // Enhanced Tire Strategy Chart
+        const tireCtx = document.getElementById('tireStrategyChart');
+        if (tireCtx && lapTimesData) {
+            const datasets = [];
+            const tireColors = {
+                'SOFT': '#ef4444',
+                'MEDIUM': '#f59e0b',
+                'HARD': '#6b7280',
+                'INTERMEDIATE': '#10b981',
+                'WET': '#3b82f6'
+            };
+
+            Object.entries(lapTimesData).forEach(([driver, data]) => {
+                if (data.tire_compounds && data.tire_compounds.length > 0) {
+                    const tireData = data.tire_compounds.map((compound, index) => ({
+                        x: index + 1,
+                        y: driver,
+                        compound: compound || 'UNKNOWN'
+                    }));
+
+                    datasets.push({
+                        label: driver,
+                        data: tireData,
+                        backgroundColor: tireData.map(d => tireColors[d.compound] || '#9ca3af'),
+                        borderColor: '#ffffff',
+                        borderWidth: 1
+                    });
+                }
+            });
+
+            new Chart(tireCtx, {
+                type: 'scatter',
+                data: { datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            title: { display: true, text: 'Lap Number' },
+                            grid: { color: '#f3f4f6' }
+                        },
+                        y: {
+                            type: 'category',
+                            title: { display: true, text: 'Driver' },
+                            grid: { color: '#f3f4f6' }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+    }
+</script>
+{% endblock %}

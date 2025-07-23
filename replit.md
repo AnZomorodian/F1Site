@@ -2,7 +2,7 @@
 
 ## Overview
 
-**Laptica** is a premium Formula 1 telemetry analysis web application built with Flask and FastF1. The application features a classic racing-inspired design with professional-grade F1 session analysis capabilities. Users can analyze comprehensive telemetry data, compare driver performances across multiple metrics, and visualize detailed racing statistics through an elegant, sophisticated interface reminiscent of classic motorsport elegance.
+**Laptica** is a modern Formula 1 telemetry analysis web application built with Flask and FastF1. The application features a clean, professional design with advanced F1 session analysis capabilities. Users can analyze comprehensive telemetry data, compare driver performances across multiple metrics, and visualize detailed racing statistics through a modern, intuitive interface with enhanced data visualization and improved user experience.
 
 ## User Preferences
 
