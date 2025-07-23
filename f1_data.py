@@ -3,17 +3,13 @@ import pandas as pd
 import numpy as np
 import logging
 from datetime import datetime
-import os
 
 class F1DataManager:
     """Manages F1 data retrieval and processing using FastF1"""
     
     def __init__(self):
-        # Enable FastF1 cache for better performance
-        cache_dir = os.path.join(os.getcwd(), 'fastf1_cache')
-        # Create cache directory if it doesn't exist
-        os.makedirs(cache_dir, exist_ok=True)
-        fastf1.Cache.enable_cache(cache_dir)
+        # Initialize without caching for cleaner deployment
+        logging.info("F1DataManager initialized - ready for F1 data analysis")
         
         # Team colors mapping
         self.team_colors = {

@@ -1,50 +1,70 @@
-/* GP Tempo Inspired Dark Theme Styles */
+/* GP Tempo Inspired Modern F1 Theme */
 
 :root {
-    --primary-color: #3671C6;
-    --primary-gradient: linear-gradient(135deg, #3671C6, #4781D7);
-    --secondary-color: #27F4D2;
-    --accent-red: #ED1131;
-    --accent-orange: #FF8000;
-    --dark-bg: #0a0a0a;
-    --card-bg: #1a1a1a;
-    --card-border: #2a2a2a;
-    --text-light: #e0e0e0;
-    --text-muted: #888888;
-    --success-color: #27F4D2;
-    --warning-color: #FFA500;
-    --danger-color: #ED1131;
-    --border-radius: 12px;
-    --box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-    --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Core GP Tempo Colors */
+    --primary-color: #F47600;
+    --primary-dark: #E2671A;
+    --secondary-color: #ED1131;
+    --accent-green: #00D2BE;
+    --accent-blue: #3671C6;
+    
+    /* Background System */
+    --bg-primary: #0A0A0A;
+    --bg-secondary: #121212;
+    --bg-tertiary: #1A1A1A;
+    --bg-card: #1F1F1F;
+    
+    /* Text System */
+    --text-primary: #FFFFFF;
+    --text-secondary: #E2E2E2;
+    --text-muted: #8A8A8A;
+    --text-disabled: #5A5A5A;
+    
+    /* Border & Shadow System */
+    --border-primary: #2A2A2A;
+    --border-secondary: #404040;
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+    
+    /* Modern Design Tokens */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Global Styles */
 body {
-    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
-    color: var(--text-light);
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    font-weight: 400;
+    line-height: 1.6;
     min-height: 100vh;
+    margin: 0;
+    padding: 0;
 }
 
 .main-content {
-    margin-top: 80px;
+    margin-top: 70px;
     padding: 2rem 0;
-    min-height: calc(100vh - 160px);
+    min-height: calc(100vh - 140px);
 }
 
 /* Navigation Styles */
 .navbar {
-    background: rgba(10, 10, 10, 0.95) !important;
-    backdrop-filter: blur(10px);
-    border-bottom: 2px solid var(--primary-color);
-    box-shadow: 0 4px 20px rgba(54, 113, 198, 0.2);
+    background: var(--bg-secondary) !important;
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border-primary);
+    box-shadow: var(--shadow-md);
+    transition: var(--transition);
 }
 
 .navbar-brand {
-    font-weight: 700;
-    font-size: 1.5rem;
-    color: var(--text-light) !important;
+    font-weight: 600;
+    font-size: 1.4rem;
+    color: var(--text-primary) !important;
     transition: var(--transition);
 }
 
@@ -55,20 +75,20 @@ body {
 
 .navbar-brand i {
     color: var(--primary-color);
-    animation: spin 3s linear infinite;
+    margin-right: 8px;
 }
 
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+.navbar-text {
+    font-size: 0.8rem;
+    color: var(--text-muted) !important;
 }
 
 /* Hero Section */
 .hero-section {
-    padding: 4rem 0;
+    padding: 3rem 0 2rem;
     text-align: center;
     position: relative;
-    overflow: hidden;
+    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
 }
 
 .hero-section::before {
@@ -78,7 +98,7 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    background: radial-gradient(circle at 50% 50%, rgba(54, 113, 198, 0.1) 0%, transparent 70%);
+    background: radial-gradient(circle at 50% 30%, rgba(244, 118, 0, 0.1) 0%, transparent 70%);
     pointer-events: none;
 }
 
@@ -117,11 +137,87 @@ body {
 
 /* Card Styles */
 .card {
-    background: var(--card-bg);
-    border: 1px solid var(--card-border);
-    border-radius: var(--border-radius);
-    box-shadow: var(--box-shadow);
+    background: var(--bg-card);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
     transition: var(--transition);
+}
+
+.card:hover {
+    border-color: var(--border-secondary);
+    box-shadow: var(--shadow-lg);
+}
+
+.card-header {
+    background: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-primary);
+    padding: 1.2rem 1.5rem;
+}
+
+.card-title {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+/* Form Styles */
+.form-label {
+    color: var(--text-secondary);
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.form-select, .form-control {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-primary);
+    color: var(--text-primary);
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+    font-size: 0.9rem;
+    padding: 0.6rem 0.8rem;
+}
+
+.form-select:focus, .form-control:focus {
+    background: var(--bg-tertiary);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(244, 118, 0, 0.2);
+    color: var(--text-primary);
+}
+
+.form-select option {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+}
+
+/* Button Styles */
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    border: none;
+    border-radius: var(--radius-sm);
+    font-weight: 500;
+    padding: 0.75rem 2rem;
+    transition: var(--transition);
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, var(--primary-dark), var(--primary-color));
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-primary:disabled {
+    background: var(--bg-tertiary);
+    color: var(--text-disabled);
+    transform: none;
+    box-shadow: none;
 }
 
 .card:hover {
