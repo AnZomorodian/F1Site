@@ -41,6 +41,17 @@ class F1DataManager:
             'SAR': '#64C4FF', 'COL': '#64C4FF'
         }
     
+    def format_lap_time(self, lap_time):
+        """Format lap time from timedelta to MM:SS.SSS format"""
+        if pd.isna(lap_time):
+            return None
+        
+        total_seconds = lap_time.total_seconds()
+        minutes = int(total_seconds // 60)
+        seconds = total_seconds % 60
+        
+        return f"{minutes}:{seconds:06.3f}"
+    
     def get_available_years(self):
         """Get available years for F1 data"""
         current_year = datetime.now().year
@@ -102,7 +113,7 @@ class F1DataManager:
             return []
     
     def get_drivers(self, year, round_number, session):
-        """Get drivers for a given session"""
+        """Get drivers for a given session with enhanced team information"""
         try:
             session_obj = fastf1.get_session(year, round_number, session)
             session_obj.load()
@@ -113,7 +124,11 @@ class F1DataManager:
             for idx, driver in results.iterrows():
                 driver_code = driver['Abbreviation']
                 team_name = driver['TeamName']
-                color = self.driver_colors.get(driver_code, self.team_colors.get(team_name, '#FFFFFF'))
+                driver_number = driver.get('DriverNumber', '')
+                
+                # Get colors
+                driver_color = self.driver_colors.get(driver_code, '#FFFFFF')
+                team_color = self.team_colors.get(team_name, driver_color)
                 
                 drivers.append({
                     'code': driver_code,
@@ -121,11 +136,15 @@ class F1DataManager:
                     'first_name': driver['FirstName'],
                     'last_name': driver['LastName'],
                     'team': team_name,
-                    'color': color,
+                    'driver_number': str(driver_number) if driver_number else '',
+                    'color': driver_color,
+                    'team_color': team_color,
                     'position': driver.get('Position', None)
                 })
             
-            return sorted(drivers, key=lambda x: x['position'] if x['position'] and pd.notna(x['position']) else 999)
+            # Group by team for better organization
+            drivers.sort(key=lambda x: (x['team'], x['code']))
+            return drivers
         except Exception as e:
             logging.error(f"Error getting drivers: {str(e)}")
             return []
@@ -181,7 +200,7 @@ class F1DataManager:
                 'full_name': driver_info['FullName'],
                 'team': team_name,
                 'color': color,
-                'fastest_lap_time': str(fastest_lap['LapTime']) if fastest_lap is not None and pd.notna(fastest_lap['LapTime']) else None,
+                'fastest_lap_time': self.format_lap_time(fastest_lap['LapTime']) if fastest_lap is not None and pd.notna(fastest_lap['LapTime']) else None,
                 'fastest_lap_number': int(fastest_lap['LapNumber']) if fastest_lap is not None else None,
                 'total_laps': len(driver_laps),
                 'valid_laps': len(valid_laps),
@@ -257,7 +276,13 @@ class F1DataManager:
                 
                 if not valid_laps.empty:
                     lap_numbers = valid_laps['LapNumber'].tolist()
-                    lap_times = [float(time.total_seconds()) for time in valid_laps['LapTime']]
+                    # Handle NaN values properly - convert to None for JSON serialization
+                    lap_times = []
+                    for time in valid_laps['LapTime']:
+                        if pd.isna(time):
+                            lap_times.append(None)
+                        else:
+                            lap_times.append(float(time.total_seconds()))
                     
                     lap_times_data[driver] = {
                         'lap_numbers': lap_numbers,

@@ -89,8 +89,9 @@
                                     Drivers
                                 </label>
                                 <div id="driversContainer" class="drivers-container">
-                                    <div class="text-muted">
-                                        <small>Select session first</small>
+                                    <div class="text-muted text-center py-3">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Select session first to load drivers
                                     </div>
                                 </div>
                             </div>
@@ -179,15 +180,13 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="{{ url_for('static', filename='js/driver-selection.js') }}"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const yearSelect = document.getElementById('year');
-    const roundSelect = document.getElementById('round');
-    const sessionSelect = document.getElementById('session');
-    const driversContainer = document.getElementById('driversContainer');
-    const analyzeBtn = document.getElementById('analyzeBtn');
-    const form = document.getElementById('selectionForm');
+// Show loading modal on form submission
+document.getElementById('selectionForm').addEventListener('submit', function() {
     const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+    loadingModal.show();
+});
 
     // Year selection handler
     yearSelect.addEventListener('change', function() {
