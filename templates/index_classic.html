@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+
+{% block title %}Laptica - Classic F1 Telemetry Analysis{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Classic Hero Section -->
+    <div class="section-header">
+        <h1 class="section-title gold-shimmer">Welcome to Laptica</h1>
+        <p class="section-subtitle">Professional Formula 1 Telemetry Analysis Platform</p>
+        <div class="section-divider"></div>
+    </div>
+
+    <!-- Classic Selection Form -->
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-8">
+            <div class="form-classic animate-classic">
+                <form method="POST" action="{{ url_for('telemetry') }}" id="telemetryForm">
+                    <div class="row g-4">
+                        <!-- Year Selection -->
+                        <div class="col-md-6">
+                            <div class="data-card">
+                                <label class="data-label" for="year">
+                                    <i class="fas fa-calendar-alt me-2"></i>
+                                    Season Year
+                                </label>
+                                <select name="year" id="year" class="form-control form-control-classic" required>
+                                    <option value="">Select Season</option>
+                                    {% for year in years %}
+                                        <option value="{{ year }}">{{ year }} Season</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Grand Prix Selection -->
+                        <div class="col-md-6">
+                            <div class="data-card">
+                                <label class="data-label" for="round">
+                                    <i class="fas fa-trophy me-2"></i>
+                                    Grand Prix
+                                </label>
+                                <select name="round" id="round" class="form-control form-control-classic" required disabled>
+                                    <option value="">Select Grand Prix</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Session Selection -->
+                        <div class="col-md-6">
+                            <div class="data-card">
+                                <label class="data-label" for="session">
+                                    <i class="fas fa-stopwatch me-2"></i>
+                                    Session Type
+                                </label>
+                                <select name="session" id="session" class="form-control form-control-classic" required disabled>
+                                    <option value="">Select Session</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Driver Selection -->
+                        <div class="col-md-6">
+                            <div class="data-card">
+                                <label class="data-label" for="drivers">
+                                    <i class="fas fa-users me-2"></i>
+                                    Drivers to Analyze
+                                </label>
+                                <select name="drivers" id="drivers" class="form-control form-control-classic" multiple disabled>
+                                    <option value="">Select Drivers</option>
+                                </select>
+                                <small class="text-muted mt-2 d-block">
+                                    Hold Ctrl/Cmd to select multiple drivers
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Classic Action Button -->
+                    <div class="text-center mt-4">
+                        <button type="submit" class="btn btn-laptica btn-lg" id="analyzeBtn" disabled>
+                            <i class="fas fa-chart-line me-2"></i>
+                            Analyze Telemetry Data
+                            <i class="fas fa-arrow-right ms-2"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Classic Feature Cards -->
+    <div class="row g-4 mt-5">
+        <div class="col-md-4">
+            <div class="classic-card h-100 text-center p-4">
+                <div class="mb-3">
+                    <i class="fas fa-tachometer-alt" style="font-size: 3rem; color: var(--laptica-primary);"></i>
+                </div>
+                <h4 class="data-label">Advanced Analytics</h4>
+                <p class="text-muted">
+                    Comprehensive telemetry analysis with sector times, speed traps, and performance metrics
+                </p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="classic-card h-100 text-center p-4">
+                <div class="mb-3">
+                    <i class="fas fa-chart-area" style="font-size: 3rem; color: var(--laptica-primary);"></i>
+                </div>
+                <h4 class="data-label">Multi-Chart Dashboard</h4>
+                <p class="text-muted">
+                    Five different visualization types including radar charts, delta analysis, and tire strategy
+                </p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="classic-card h-100 text-center p-4">
+                <div class="mb-3">
+                    <i class="fas fa-database" style="font-size: 3rem; color: var(--laptica-primary);"></i>
+                </div>
+                <h4 class="data-label">Real F1 Data</h4>
+                <p class="text-muted">
+                    Authentic Formula 1 telemetry data powered by the official FastF1 API library
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="d-none">
+    <div class="text-center">
+        <div class="spinner-border text-warning mb-3" style="width: 3rem; height: 3rem;"></div>
+        <h4 class="text-warning">Loading F1 Data...</h4>
+        <p class="text-muted">Please wait while we fetch the telemetry data</p>
+    </div>
+</div>
+
+<style>
+#loadingOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.9);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const yearSelect = document.getElementById('year');
+    const roundSelect = document.getElementById('round');
+    const sessionSelect = document.getElementById('session');
+    const driversSelect = document.getElementById('drivers');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const form = document.getElementById('telemetryForm');
+
+    // Year change handler
+    yearSelect.addEventListener('change', function() {
+        if (this.value) {
+            fetch(`/api/events/${this.value}`)
+                .then(response => response.json())
+                .then(data => {
+                    roundSelect.innerHTML = '<option value="">Select Grand Prix</option>';
+                    data.forEach(event => {
+                        roundSelect.innerHTML += `<option value="${event.round}">${event.name}</option>`;
+                    });
+                    roundSelect.disabled = false;
+                    sessionSelect.disabled = true;
+                    driversSelect.disabled = true;
+                    analyzeBtn.disabled = true;
+                });
+        }
+    });
+
+    // Round change handler
+    roundSelect.addEventListener('change', function() {
+        if (this.value) {
+            fetch(`/api/sessions/${yearSelect.value}/${this.value}`)
+                .then(response => response.json())
+                .then(data => {
+                    sessionSelect.innerHTML = '<option value="">Select Session</option>';
+                    data.forEach(session => {
+                        sessionSelect.innerHTML += `<option value="${session}">${session}</option>`;
+                    });
+                    sessionSelect.disabled = false;
+                    driversSelect.disabled = true;
+                    analyzeBtn.disabled = true;
+                });
+        }
+    });
+
+    // Session change handler
+    sessionSelect.addEventListener('change', function() {
+        if (this.value) {
+            fetch(`/api/drivers/${yearSelect.value}/${roundSelect.value}/${this.value}`)
+                .then(response => response.json())
+                .then(data => {
+                    driversSelect.innerHTML = '<option value="">Select Drivers</option>';
+                    data.forEach(driver => {
+                        driversSelect.innerHTML += `<option value="${driver.code}" style="color: ${driver.color}">${driver.code} - ${driver.name}</option>`;
+                    });
+                    driversSelect.disabled = false;
+                    checkFormValidity();
+                });
+        }
+    });
+
+    // Drivers change handler
+    driversSelect.addEventListener('change', checkFormValidity);
+
+    function checkFormValidity() {
+        if (driversSelect.selectedOptions.length > 0) {
+            analyzeBtn.disabled = false;
+        } else {
+            analyzeBtn.disabled = true;
+        }
+    }
+
+    // Form submission handler
+    form.addEventListener('submit', function() {
+        document.getElementById('loadingOverlay').classList.remove('d-none');
+    });
+});
+</script>
+{% endblock %}

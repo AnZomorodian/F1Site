@@ -1,0 +1,317 @@
+{% extends "base.html" %}
+
+{% block title %}Laptica - F1 Telemetry Analysis{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Classic Session Header -->
+    <div class="section-header animate-classic">
+        <h1 class="section-title">{{ session_info.event_name }}</h1>
+        <p class="section-subtitle">{{ session_info.session }} - {{ session_info.year }} Season</p>
+        <div class="section-divider"></div>
+        
+        <div class="row justify-content-center">
+            <div class="col-auto">
+                <span class="badge" style="background: var(--laptica-primary); color: var(--laptica-secondary); padding: 10px 20px; font-size: 1rem;">
+                    <i class="fas fa-map-marker-alt me-2"></i>
+                    {{ session_info.location }}, {{ session_info.country }}
+                </span>
+            </div>
+            <div class="col-auto">
+                <span class="badge" style="background: var(--racing-red); padding: 10px 20px; font-size: 1rem;">
+                    <i class="fas fa-calendar me-2"></i>
+                    {{ session_info.date }}
+                </span>
+            </div>
+            <div class="col-auto">
+                <a href="{{ url_for('index') }}" class="btn btn-laptica">
+                    <i class="fas fa-plus me-2"></i>
+                    New Analysis
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Performance Overview -->
+    <div class="data-grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
+        <div class="data-card animate-classic">
+            <div class="data-label">
+                <i class="fas fa-users me-2"></i>
+                Drivers Analyzed
+            </div>
+            <div class="data-value">{{ lap_times_data|length }}</div>
+        </div>
+        
+        <div class="data-card animate-classic">
+            <div class="data-label">
+                <i class="fas fa-flag me-2"></i>
+                Total Laps Completed
+            </div>
+            <div class="data-value">
+                {% set total_laps = lap_times_data.values() | map(attribute='total_laps') | sum %}
+                {{ total_laps }}
+            </div>
+        </div>
+        
+        <div class="data-card animate-classic">
+            <div class="data-label">
+                <i class="fas fa-stopwatch me-2"></i>
+                Fastest Lap Time
+            </div>
+            <div class="data-value" style="font-size: 1.5rem;">
+                {% set fastest_times = lap_times_data.values() | selectattr('fastest_lap_time') | map(attribute='fastest_lap_time') | list %}
+                {% if fastest_times %}
+                    {% set fastest_time = fastest_times | min %}
+                    {% set minutes = (fastest_time // 60) | int %}
+                    {% set seconds = fastest_time % 60 %}
+                    {{ minutes }}:{{ "%.3f"|format(seconds) }}
+                {% else %}
+                    N/A
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="data-card animate-classic">
+            <div class="data-label">
+                <i class="fas fa-tachometer-alt me-2"></i>
+                Average Top Speed
+            </div>
+            <div class="data-value">
+                {% set all_speeds = [] %}
+                {% for driver_data in lap_times_data.values() %}
+                    {% for speed in driver_data.speed_traps %}
+                        {% if speed %}
+                            {{ all_speeds.append(speed) or '' }}
+                        {% endif %}
+                    {% endfor %}
+                {% endfor %}
+                {% if all_speeds %}
+                    {{ "%.1f"|format(all_speeds | sum / all_speeds | length) }} km/h
+                {% else %}
+                    N/A
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Classic Dashboard Grid -->
+    <div class="data-grid mt-5" style="grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));">
+        <!-- Enhanced Lap Times Chart -->
+        <div class="classic-card animate-classic">
+            <div class="p-4">
+                <h3 class="data-label mb-3">
+                    <i class="fas fa-chart-line me-2"></i>
+                    Lap Times Evolution
+                </h3>
+                <p class="text-muted mb-4">Complete lap time progression throughout the session</p>
+                <div style="height: 400px; position: relative;">
+                    <canvas id="lapTimesChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sector Analysis Radar -->
+        <div class="classic-card animate-classic">
+            <div class="p-4">
+                <h3 class="data-label mb-3">
+                    <i class="fas fa-chart-area me-2"></i>
+                    Sector Performance Analysis
+                </h3>
+                <p class="text-muted mb-4">Average sector times comparison between drivers</p>
+                <div style="height: 400px; position: relative;">
+                    <canvas id="sectorRadarChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Speed Trap Analysis -->
+        <div class="classic-card animate-classic">
+            <div class="p-4">
+                <h3 class="data-label mb-3">
+                    <i class="fas fa-tachometer-alt me-2"></i>
+                    Speed Trap Analysis
+                </h3>
+                <p class="text-muted mb-4">Maximum speeds achieved throughout the session</p>
+                <div style="height: 400px; position: relative;">
+                    <canvas id="speedChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Delta Analysis -->
+        <div class="classic-card animate-classic">
+            <div class="p-4">
+                <h3 class="data-label mb-3">
+                    <i class="fas fa-balance-scale me-2"></i>
+                    Performance Gap Analysis
+                </h3>
+                <p class="text-muted mb-4">Time delta comparison relative to fastest driver</p>
+                <div style="height: 400px; position: relative;">
+                    <canvas id="deltaChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tire Strategy Overview -->
+        <div class="classic-card animate-classic">
+            <div class="p-4">
+                <h3 class="data-label mb-3">
+                    <i class="fas fa-circle me-2"></i>
+                    Tire Strategy Overview
+                </h3>
+                <p class="text-muted mb-4">Compound usage patterns throughout the session</p>
+                <div style="height: 400px; position: relative;">
+                    <canvas id="tireStrategyChart"></canvas>
+                </div>
+                <!-- Tire Legend -->
+                <div class="mt-3 d-flex flex-wrap justify-content-center gap-3">
+                    <div class="d-flex align-items-center">
+                        <div style="width: 20px; height: 20px; background: #ff0000; border-radius: 4px; margin-right: 8px;"></div>
+                        <span>Soft</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div style="width: 20px; height: 20px; background: #ffff00; border-radius: 4px; margin-right: 8px;"></div>
+                        <span>Medium</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div style="width: 20px; height: 20px; background: #ffffff; border-radius: 4px; margin-right: 8px; border: 1px solid #333;"></div>
+                        <span>Hard</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div style="width: 20px; height: 20px; background: #00ff00; border-radius: 4px; margin-right: 8px;"></div>
+                        <span>Intermediate</span>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div style="width: 20px; height: 20px; background: #0000ff; border-radius: 4px; margin-right: 8px;"></div>
+                        <span>Wet</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Driver Performance Cards -->
+    <div class="section-header mt-5">
+        <h2 class="section-title" style="font-size: 2.5rem;">Driver Performance Breakdown</h2>
+        <div class="section-divider"></div>
+    </div>
+
+    <div class="data-grid" style="grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));">
+        {% for driver_code, driver_data in lap_times_data.items() %}
+        <div class="classic-card animate-classic">
+            <div class="p-4">
+                <!-- Driver Header -->
+                <div class="d-flex align-items-center mb-4">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center me-3" 
+                         style="width: 60px; height: 60px; background: {{ driver_data.color }}; color: white; font-weight: bold; font-size: 1.2rem;">
+                        {{ driver_code }}
+                    </div>
+                    <div>
+                        <h4 class="data-label mb-1">{{ driver_code }}</h4>
+                        <p class="text-muted mb-0">Driver #{{ driver_code }}</p>
+                    </div>
+                </div>
+
+                <!-- Performance Statistics -->
+                <div class="row g-3">
+                    {% if driver_data.fastest_lap_time %}
+                    <div class="col-6">
+                        <div class="text-center p-3" style="background: var(--bg-surface); border-radius: var(--radius-classic);">
+                            <i class="fas fa-stopwatch text-success mb-2" style="font-size: 1.5rem;"></i>
+                            <div class="data-label">Best Lap</div>
+                            <div class="data-value" style="font-size: 1.2rem; color: var(--laptica-primary);">
+                                {% set minutes = (driver_data.fastest_lap_time // 60) | int %}
+                                {% set seconds = driver_data.fastest_lap_time % 60 %}
+                                {{ minutes }}:{{ "%.3f"|format(seconds) }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="col-6">
+                        <div class="text-center p-3" style="background: var(--bg-surface); border-radius: var(--radius-classic);">
+                            <i class="fas fa-flag mb-2" style="font-size: 1.5rem; color: var(--laptica-primary);"></i>
+                            <div class="data-label">Total Laps</div>
+                            <div class="data-value" style="font-size: 1.2rem;">{{ driver_data.total_laps }}</div>
+                        </div>
+                    </div>
+                    
+                    {% if driver_data.average_lap_time %}
+                    <div class="col-6">
+                        <div class="text-center p-3" style="background: var(--bg-surface); border-radius: var(--radius-classic);">
+                            <i class="fas fa-chart-bar text-info mb-2" style="font-size: 1.5rem;"></i>
+                            <div class="data-label">Average Lap</div>
+                            <div class="data-value" style="font-size: 1.2rem; color: var(--racing-blue);">
+                                {% set avg_minutes = (driver_data.average_lap_time // 60) | int %}
+                                {% set avg_seconds = driver_data.average_lap_time % 60 %}
+                                {{ avg_minutes }}:{{ "%.3f"|format(avg_seconds) }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="col-6">
+                        <div class="text-center p-3" style="background: var(--bg-surface); border-radius: var(--radius-classic);">
+                            <i class="fas fa-tachometer-alt text-warning mb-2" style="font-size: 1.5rem;"></i>
+                            <div class="data-label">Top Speed</div>
+                            <div class="data-value" style="font-size: 1.2rem; color: var(--racing-red);">
+                                {% set max_speed = driver_data.speed_traps | select('number') | max %}
+                                {% if max_speed %}
+                                    {{ "%.1f"|format(max_speed) }} km/h
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Enhanced Chart Initialization -->
+<script>
+    const lapTimesData = {{ lap_times_data | tojson }};
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // Enhanced Chart.js configuration for classic theme
+        Chart.defaults.color = '#ffffff';
+        Chart.defaults.borderColor = '#444444';
+        Chart.defaults.backgroundColor = 'rgba(212, 175, 55, 0.1)';
+        
+        if (window.f1Dashboard) {
+            // Initialize all premium charts
+            window.f1Dashboard.createLapTimesChart('lapTimesChart', lapTimesData);
+            window.f1Dashboard.createSectorRadarChart('sectorRadarChart', lapTimesData);
+            window.f1Dashboard.createSpeedChart('speedChart', lapTimesData);
+            window.f1Dashboard.createDeltaChart('deltaChart', lapTimesData);
+            window.f1Dashboard.createTireStrategyChart('tireStrategyChart', lapTimesData);
+        }
+        
+        // Add entrance animations
+        setTimeout(() => {
+            document.querySelectorAll('.animate-classic').forEach((el, index) => {
+                setTimeout(() => {
+                    el.style.opacity = '1';
+                    el.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        }, 200);
+    });
+</script>
+
+<style>
+.animate-classic {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.6s ease-out;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/advanced-charts.js') }}"></script>
+<script src="{{ url_for('static', filename='js/dashboard-animations.js') }}"></script>
+{% endblock %}

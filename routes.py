@@ -59,7 +59,7 @@ def telemetry():
     
     if not all([year, round_number, session, drivers]):
         flash('Please select year, grand prix, session, and at least one driver', 'error')
-        return render_template('index.html', years=f1_data.get_available_years())
+        return render_template('index_classic.html', years=f1_data.get_available_years())
     
     try:
         # Get session info
@@ -70,9 +70,9 @@ def telemetry():
         
         if not lap_times_data:
             flash('No data available for selected drivers', 'error')
-            return render_template('index.html', years=f1_data.get_available_years())
+            return render_template('index_classic.html', years=f1_data.get_available_years())
         
-        return render_template('telemetry_premium.html', 
+        return render_template('telemetry_classic.html', 
                              session_info=session_info,
                              lap_times_data=lap_times_data,
                              year=year,
@@ -83,7 +83,7 @@ def telemetry():
         logging.error(f"Error loading telemetry data: {str(e)}")
         logging.error(traceback.format_exc())
         flash(f'Error loading telemetry data: {str(e)}', 'error')
-        return render_template('index.html', years=f1_data.get_available_years())
+        return render_template('index_classic.html', years=f1_data.get_available_years())
 
 @app.route('/api/telemetry/<int:year>/<int:round_number>/<session>/<driver>')
 def get_telemetry_data(year, round_number, session, driver):
@@ -109,10 +109,10 @@ def get_lap_times(year, round_number, session):
 
 @app.errorhandler(404)
 def not_found_error(error):
-    return render_template('index.html', years=f1_data.get_available_years()), 404
+    return render_template('index_classic.html', years=f1_data.get_available_years()), 404
 
 @app.errorhandler(500)
 def internal_error(error):
     logging.error(f"Internal server error: {str(error)}")
     flash('An internal error occurred. Please try again.', 'error')
-    return render_template('index.html', years=f1_data.get_available_years()), 500
+    return render_template('index_classic.html', years=f1_data.get_available_years()), 500

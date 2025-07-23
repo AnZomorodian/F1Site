@@ -1,0 +1,366 @@
+/* Laptica Classic Theme - Premium F1 Telemetry */
+
+/* Laptica Classic Theme Variables */
+:root {
+    --laptica-primary: #d4af37;
+    --laptica-secondary: #2c1810;
+    --laptica-accent: #8b0000;
+    --laptica-gold: #ffd700;
+    --laptica-bronze: #cd7f32;
+    
+    /* Classic Racing Colors */
+    --racing-red: #dc143c;
+    --racing-green: #006400;
+    --racing-blue: #0066cc;
+    --classic-silver: #c0c0c0;
+    
+    /* Background Colors - Classic Style */
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #2d2d2d;
+    --bg-tertiary: #3a3a3a;
+    --bg-card: #2a2a2a;
+    --bg-surface: #333333;
+    
+    /* Text Colors */
+    --text-primary: #ffffff;
+    --text-secondary: #e0e0e0;
+    --text-muted: #999999;
+    --text-disabled: #666666;
+    
+    /* Border Colors */
+    --border-primary: #444444;
+    --border-secondary: #555555;
+    --border-gold: #d4af37;
+    
+    /* Classic Shadows */
+    --shadow-classic: 0 4px 8px rgba(0, 0, 0, 0.6);
+    --shadow-gold: 0 0 20px rgba(212, 175, 55, 0.3);
+    --shadow-deep: 0 8px 32px rgba(0, 0, 0, 0.8);
+    
+    /* Border Radius - Classic */
+    --radius-classic: 8px;
+    --radius-elegant: 12px;
+    
+    /* Transitions */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-elegant: all 0.4s ease-in-out;
+}
+
+/* Base Styles */
+body {
+    background: linear-gradient(135deg, var(--bg-primary), var(--bg-secondary));
+    background-attachment: fixed;
+    color: var(--text-primary);
+    font-family: 'Crimson Text', 'Times New Roman', serif;
+    line-height: 1.7;
+    min-height: 100vh;
+    position: relative;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(circle at 25% 25%, rgba(212, 175, 55, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 75% 75%, rgba(139, 0, 0, 0.1) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: -1;
+}
+
+.main-content {
+    padding-top: 100px;
+    min-height: calc(100vh - 160px);
+}
+
+/* Laptica Navigation Styles */
+.laptica-nav {
+    background: linear-gradient(135deg, var(--laptica-secondary), #1a1a1a);
+    border-bottom: 3px solid var(--laptica-primary);
+    box-shadow: var(--shadow-deep);
+    backdrop-filter: blur(10px);
+}
+
+.laptica-brand {
+    font-family: 'Playfair Display', serif !important;
+    font-size: 2.5rem !important;
+    font-weight: 700;
+    text-decoration: none !important;
+    display: flex;
+    align-items: center;
+    transition: var(--transition-elegant);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
+}
+
+.laptica-brand:hover {
+    transform: scale(1.05);
+    filter: drop-shadow(0 0 20px var(--laptica-gold));
+}
+
+.laptica-text {
+    background: linear-gradient(45deg, var(--laptica-primary), var(--laptica-gold));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: 2px;
+}
+
+.laptica-icon {
+    color: var(--laptica-primary);
+    filter: drop-shadow(0 0 10px var(--laptica-gold));
+    animation: iconPulse 3s ease-in-out infinite;
+}
+
+@keyframes iconPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* Laptica Footer Styles */
+.laptica-footer {
+    background: linear-gradient(135deg, var(--laptica-secondary), #0d0d0d);
+    border-top: 3px solid var(--laptica-primary);
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.8);
+}
+
+.laptica-footer-brand strong {
+    color: var(--laptica-primary);
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    letter-spacing: 1px;
+}
+
+.social-links {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+}
+
+.social-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--laptica-primary), var(--laptica-gold));
+    color: var(--laptica-secondary);
+    font-size: 1.5rem;
+    text-decoration: none;
+    transition: var(--transition-elegant);
+    box-shadow: var(--shadow-classic);
+}
+
+.social-link:hover {
+    transform: translateY(-5px) scale(1.1);
+    box-shadow: 0 8px 25px rgba(212, 175, 55, 0.5);
+    color: var(--laptica-secondary);
+}
+
+/* Classic Card Styles */
+.classic-card {
+    background: linear-gradient(145deg, var(--bg-card), var(--bg-tertiary));
+    border: 2px solid var(--border-gold);
+    border-radius: var(--radius-elegant);
+    box-shadow: var(--shadow-classic);
+    transition: var(--transition-smooth);
+    position: relative;
+    overflow: hidden;
+}
+
+.classic-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--laptica-primary), var(--laptica-gold));
+}
+
+.classic-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-gold);
+    border-color: var(--laptica-gold);
+}
+
+/* Classic Buttons */
+.btn-laptica {
+    background: linear-gradient(135deg, var(--laptica-primary), var(--laptica-gold));
+    border: none;
+    color: var(--laptica-secondary);
+    font-weight: 600;
+    font-family: 'Playfair Display', serif;
+    padding: 12px 30px;
+    border-radius: var(--radius-classic);
+    transition: var(--transition-elegant);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: var(--shadow-classic);
+}
+
+.btn-laptica:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(212, 175, 55, 0.4);
+    filter: brightness(1.1);
+    color: var(--laptica-secondary);
+}
+
+/* Classic Section Headers */
+.section-header {
+    text-align: center;
+    margin-bottom: 3rem;
+    position: relative;
+}
+
+.section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--laptica-primary);
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+    margin-bottom: 1rem;
+}
+
+.section-subtitle {
+    font-size: 1.2rem;
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.section-divider {
+    width: 200px;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--laptica-primary), transparent);
+    margin: 2rem auto;
+}
+
+/* Classic Form Styles */
+.form-classic {
+    background: var(--bg-card);
+    border: 2px solid var(--border-gold);
+    border-radius: var(--radius-elegant);
+    padding: 2rem;
+    box-shadow: var(--shadow-classic);
+}
+
+.form-control-classic {
+    background: var(--bg-surface);
+    border: 2px solid var(--border-secondary);
+    border-radius: var(--radius-classic);
+    color: var(--text-primary);
+    padding: 12px 16px;
+    transition: var(--transition-smooth);
+}
+
+.form-control-classic:focus {
+    border-color: var(--laptica-primary);
+    box-shadow: 0 0 0 0.2rem rgba(212, 175, 55, 0.25);
+    background: var(--bg-tertiary);
+}
+
+/* Classic Data Display */
+.data-grid {
+    display: grid;
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.data-card {
+    background: linear-gradient(145deg, var(--bg-card), var(--bg-surface));
+    border: 2px solid var(--border-gold);
+    border-radius: var(--radius-elegant);
+    padding: 2rem;
+    box-shadow: var(--shadow-classic);
+    position: relative;
+    overflow: hidden;
+}
+
+.data-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: linear-gradient(90deg, var(--laptica-primary), var(--laptica-gold));
+}
+
+.data-label {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    color: var(--laptica-primary);
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.data-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    font-family: 'Crimson Text', serif;
+}
+
+/* Classic Animation Effects */
+@keyframes classicFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes goldShimmer {
+    0% {
+        background-position: -200px 0;
+    }
+    100% {
+        background-position: 200px 0;
+    }
+}
+
+.animate-classic {
+    animation: classicFadeIn 0.8s ease-out;
+}
+
+.gold-shimmer {
+    background: linear-gradient(
+        90deg,
+        var(--laptica-primary) 0%,
+        var(--laptica-gold) 50%,
+        var(--laptica-primary) 100%
+    );
+    background-size: 200px 100%;
+    animation: goldShimmer 2s infinite;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Responsive Classic Design */
+@media (max-width: 768px) {
+    .laptica-brand {
+        font-size: 2rem !important;
+    }
+    
+    .section-title {
+        font-size: 2.5rem;
+    }
+    
+    .social-links {
+        gap: 1rem;
+    }
+    
+    .social-link {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+    }
+}
