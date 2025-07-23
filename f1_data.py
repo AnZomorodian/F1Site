@@ -11,6 +11,8 @@ class F1DataManager:
     def __init__(self):
         # Enable FastF1 cache for better performance
         cache_dir = os.path.join(os.getcwd(), 'fastf1_cache')
+        # Create cache directory if it doesn't exist
+        os.makedirs(cache_dir, exist_ok=True)
         fastf1.Cache.enable_cache(cache_dir)
         
         # Team colors mapping

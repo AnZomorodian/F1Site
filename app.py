@@ -13,6 +13,3 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 # Import routes after app creation to avoid circular imports
 from routes import *
-
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
